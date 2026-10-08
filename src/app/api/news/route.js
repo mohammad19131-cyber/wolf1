@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "../../lib/supabase";
+import { createServerClient, hasSupabaseConfig } from "../../lib/supabase";
+import { requireAdmin } from "../../lib/auth";
 
 export async function GET() {
 	try {
+		if (!hasSupabaseConfig()) {
+			return NextResponse.json({ news: [] });
+		}
+
 		const supabase = createServerClient();
 		
 		const { data: news, error } = await supabase
@@ -11,8 +16,12 @@ export async function GET() {
 			.order('created_at', { ascending: false });
 
 		if (error) {
-			console.error("News GET error:", error.message);
-			return NextResponse.json({ error: "Failed to fetch news" }, { status: 500 });
+			const fallback = await supabase.from('news').select('*');
+			if (fallback.error) {
+				console.error("News GET error:", error.message);
+				return NextResponse.json({ error: "Failed to fetch news" }, { status: 500 });
+			}
+			return NextResponse.json({ news: fallback.data || [] });
 		}
 
 		return NextResponse.json({ news: news || [] });
@@ -24,10 +33,17 @@ export async function GET() {
 
 export async function POST(req) {
 	try {
+		const { response } = await requireAdmin(req);
+		if (response) return response;
+
 		const { title, body } = await req.json();
 		
 		if (!title || !body) {
 			return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+		}
+
+		if (!hasSupabaseConfig()) {
+			return NextResponse.json({ error: "Database is not configured" }, { status: 503 });
 		}
 
 		const supabase = createServerClient();
@@ -52,10 +68,17 @@ export async function POST(req) {
 
 export async function PUT(req) {
 	try {
+		const { response } = await requireAdmin(req);
+		if (response) return response;
+
 		const { id, title, body } = await req.json();
 		
 		if (!id || !title || !body) {
 			return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+		}
+
+		if (!hasSupabaseConfig()) {
+			return NextResponse.json({ error: "Database is not configured" }, { status: 503 });
 		}
 
 		const supabase = createServerClient();
@@ -81,10 +104,17 @@ export async function PUT(req) {
 
 export async function DELETE(req) {
 	try {
+		const { response } = await requireAdmin(req);
+		if (response) return response;
+
 		const { id } = await req.json();
 		
 		if (!id) {
 			return NextResponse.json({ error: "Missing id" }, { status: 400 });
+		}
+
+		if (!hasSupabaseConfig()) {
+			return NextResponse.json({ error: "Database is not configured" }, { status: 503 });
 		}
 
 		const supabase = createServerClient();

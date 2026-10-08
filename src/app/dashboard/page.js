@@ -1,162 +1,83 @@
 "use client";
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Wallet, BarChart3, Newspaper, LogOut } from "lucide-react";
-import Button from "../components/Button";
+import Link from "next/link";
+import { Wallet, Newspaper, AlertTriangle, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import Navbar from "../components/Navbar";
+import Countdown from "../components/Countdown";
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
-  const [stocks, setStocks] = useState([]);
   const [news, setNews] = useState([]);
-  const [holdings, setHoldings] = useState([]);
-  const [selectedStock, setSelectedStock] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [activeTab, setActiveTab] = useState("trade");
-  const [tabContentKey, setTabContentKey] = useState(0);
+  const [crisis, setCrisis] = useState(null);
+  const [myDecision, setMyDecision] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  // --- Fetch Data ---
-  async function fetchData() {
-    setLoading(true);
-    const [userRes, stocksRes, newsRes] = await Promise.all([
+  async function fetchData(quiet = false) {
+    if (!quiet) setLoading(true);
+    const [userRes, newsRes, crisisRes] = await Promise.all([
       fetch("/api/userinfo", { credentials: "include" }),
-      fetch("/api/stocks"),
       fetch("/api/news"),
+      fetch("/api/crisis", { credentials: "include" }),
     ]);
-    const userData = await userRes.json();
-    const stocksData = await stocksRes.json();
-    const newsData = await newsRes.json();
+
+    if (userRes.status === 401 || crisisRes.status === 401) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const userData = await userRes.json().catch(() => ({}));
+    const newsData = await newsRes.json().catch(() => ({}));
+    const crisisData = await crisisRes.json().catch(() => ({}));
+
+    if (!userRes.ok || !userData.username) {
+      window.location.href = "/login";
+      return;
+    }
 
     setUser(userData);
-    setStocks(stocksData.stocks || []);
     setNews(newsData.news || []);
-    setHoldings(userData.stocks || []);
-    setLoading(false);
+    setCrisis(crisisData.crisis || null);
+    setMyDecision(crisisData.myDecision || null);
+    if (!quiet) setLoading(false);
   }
 
   useEffect(() => {
     fetchData();
+    const id = setInterval(() => fetchData(true), 5000);
+    return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    setTabContentKey(prev => prev + 1);
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError("");
-        setSuccess("");
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, success]);
-
-  // --- Buy ---
-  async function handleBuy() {
-    setError("");
-    setSuccess("");
-    if (!selectedStock || !quantity) return setError("Please select a stock and quantity");
-    const stock = stocks.find(s => s.id === selectedStock);
-    if (!stock) return setError("Invalid stock selected");
-    const cost = stock.StockValue * Number(quantity);
-    if (user.balance < cost) return setError("Insufficient balance");
-    setLoading(true);
-
-    let updatedHoldings = Array.isArray(user.stocks) ? [...user.stocks] : [];
-    const idx = updatedHoldings.findIndex(h => h.stockId === stock.id);
-    if (idx >= 0) {
-      const prevQty = updatedHoldings[idx].quantity;
-      const prevAvg = updatedHoldings[idx].avgPrice;
-      const newQty = prevQty + Number(quantity);
-      const newAvg = ((prevAvg * prevQty) + cost) / newQty;
-      updatedHoldings[idx].quantity = newQty;
-      updatedHoldings[idx].avgPrice = newAvg;
-    } else {
-      updatedHoldings.push({ stockId: stock.id, stockName: stock.StockName, quantity: Number(quantity), avgPrice: stock.StockValue });
-    }
-    const newBalance = user.balance - cost;
-
-    const res = await fetch("/api/admin", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: user.username, balance: newBalance, stocks: updatedHoldings }),
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      setLoading(false);
-      return setError("Failed to update balance");
-    }
-    setSuccess("Stock purchased successfully!");
-    setQuantity("");
-    setLoading(false);
-    fetchData();
-  }
-
-  // --- Sell ---
-  async function handleSell() {
-    setError("");
-    setSuccess("");
-    if (!selectedStock || !quantity) return setError("Please select a stock and quantity");
-    const stock = stocks.find(s => s.id === selectedStock);
-    if (!stock) return setError("Invalid stock selected");
-
-    let updatedHoldings = Array.isArray(user.stocks) ? [...user.stocks] : [];
-    const idx = updatedHoldings.findIndex(h => h.stockId === stock.id);
-    if (idx < 0 || updatedHoldings[idx].quantity < Number(quantity)) return setError("Not enough shares to sell");
-
-    const revenue = stock.StockValue * Number(quantity);
-    setLoading(true);
-    updatedHoldings[idx].quantity -= Number(quantity);
-    if (updatedHoldings[idx].quantity === 0) updatedHoldings.splice(idx, 1);
-
-    const newBalance = user.balance + revenue;
-
-    const res = await fetch("/api/admin", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: user.username, balance: newBalance, stocks: updatedHoldings }),
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      setLoading(false);
-      return setError("Failed to update balance");
-    }
-    setSuccess("Stock sold successfully!");
-    setQuantity("");
-    setLoading(false);
-    fetchData();
-  }
-
-  // --- Logout ---
   async function handleLogout() {
-    setLoading(true);
+    setLoggingOut(true);
     const res = await fetch("/api/logout", { method: "POST" });
     if (res.ok) window.location.href = "/";
     else {
       setError("Failed to logout");
-      setLoading(false);
+      setLoggingOut(false);
     }
   }
 
-  // --- Derived values ---
-  const selectedStockData = stocks.find(s => s.id === selectedStock);
-  const totalCost = selectedStockData ? selectedStockData.StockValue * Number(quantity || 0) : 0;
-  const portfolioValue = holdings.reduce((sum, h) => {
-    const stock = stocks.find(s => s.id === h.stockId);
-    if (stock) return sum + stock.StockValue * h.quantity;
-    else if (h.stockId.startsWith("bid:")) return sum + h.avgPrice * h.quantity;
-    return sum;
-  }, 0);
+  const submitted = Boolean(myDecision?.selectedOptionId);
 
-  if (!user) {
+  function crisisStatusLabel() {
+    if (!crisis) return "No active crisis";
+    if (crisis.status === "active") {
+      if (crisis.timer?.expired) return "Decision window closed";
+      return submitted ? "Active — decision submitted" : "Active — awaiting your decision";
+    }
+    if (crisis.status === "locked") {
+      return submitted ? "Locked — waiting for reveal" : "Locked — no decision submitted";
+    }
+    if (crisis.status === "revealed") return "Revealed";
+    return crisis.status;
+  }
+
+  if (loading || !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#191919] via-black to-[#191919] flex items-center justify-center">
-        <div className="text-gold-500 text-xl">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-[#14070A] via-[#0B0304] to-[#14070A] flex items-center justify-center">
+        <div className="text-[#F3D393] text-xl">Loading...</div>
       </div>
     );
   }
@@ -173,278 +94,132 @@ export default function DashboardPage() {
           100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         .glass-effect {
-          background: rgba(255, 207, 96, 0.1);
+          background: rgba(232, 199, 122, 0.08);
           backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 207, 96, 0.2);
-        }
-        .stock-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(255, 207, 96, 0.4);
-        }
-        .holding-card {
-          background: linear-gradient(135deg, rgba(25,25,25,0.8) 0%, rgba(255,207,96,0.1) 100%);
-        }
-        .holding-card:hover {
-          background: linear-gradient(135deg, rgba(25,25,25,0.9) 0%, rgba(255,207,96,0.2) 100%);
+          border: 1px solid rgba(232, 199, 122, 0.18);
         }
       `}</style>
-      <Navbar onLogout={handleLogout} loading={loading} />
-      <main className="min-h-[calc(100vh-180px)] bg-gradient-to-br from-[#191919] via-black to-[#191919] font-sans text-white p-3 sm:p-4 md:p-6 overflow-x-hidden w-full pb-8">
-        <div className="mx-auto px-2 sm:px-4 w-full max-w-full" style={{ overflowX: 'hidden' }}>
-          {/* Header */}
+      <Navbar onLogout={handleLogout} loading={loggingOut} />
+      <main className="min-h-[calc(100vh-180px)] bg-gradient-to-br from-[#14070A] via-[#0B0304] to-[#14070A] font-sans text-white p-3 sm:p-4 md:p-6 overflow-x-hidden w-full pb-8">
+        <div className="mx-auto px-2 sm:px-4 w-full max-w-5xl" style={{ overflowX: "hidden" }}>
           <header className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="w-full">
-              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-[#fbbf24] via-[#ffd700] to-[#fbbf24] bg-clip-text text-transparent text-center sm:text-left animate-fadein">
-                Trading Dashboard
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-[#E8C77A] via-[#F5DFA3] to-[#E8C77A] bg-clip-text text-transparent text-center sm:text-left animate-fadein">
+                Intelligence Hub
               </h1>
               <div className="glass-effect rounded-xl p-3 sm:p-4">
-                <p className="text-yellow-200 text-xs sm:text-sm md:text-base text-center sm:text-left">
+                <p className="text-sm md:text-base text-center sm:text-left" style={{ color: "#D3C3C5" }}>
                   Welcome, <span className="font-bold text-white">{user.username}</span>
                 </p>
                 <div className="mt-1.5 flex items-center justify-center sm:justify-start gap-2">
-                  <Wallet className="text-[#fbbf24]" size={18} />
-                  <span className="text-yellow-300 text-xs sm:text-sm">Available Balance:</span>
-                  <span className="font-bold text-lg sm:text-xl text-[#fbbf24]">${user.balance?.toLocaleString()}</span>
+                  <Wallet className="text-[#E8C77A]" size={18} />
+                  <span className="text-xs sm:text-sm" style={{ color: "#D3C3C5" }}>Current Capital:</span>
+                  <span className="font-bold text-lg sm:text-xl text-[#F3D393]">
+                    ${Number(user.balance ?? 0).toLocaleString()}
+                  </span>
                 </div>
-                {portfolioValue > 0 && (
-                  <div className="mt-1.5 flex items-center justify-center sm:justify-start gap-2">
-                    <BarChart3 className="text-yellow-400" size={18} />
-                    <span className="text-yellow-300 text-xs sm:text-sm">Portfolio Value:</span>
-                    <span className="font-bold text-base sm:text-lg text-yellow-400">${portfolioValue.toLocaleString()}</span>
-                  </div>
-                )}
               </div>
             </div>
           </header>
 
-          {/* Toast */}
-          {(error || success) && (
-            <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl p-3 rounded-lg backdrop-blur-md border text-sm shadow-2xl animate-fadein ${
-              error
-                ? "bg-red-500/90 border-red-400/50 text-white"
-                : "bg-yellow-500/90 border-yellow-400/50 text-black"
-            }`}>
-              {error || success}
+          {error && (
+            <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl p-3 rounded-lg backdrop-blur-md border text-sm shadow-2xl animate-fadein bg-red-500/90 border-red-400/50 text-white">
+              {error}
             </div>
           )}
 
-          {/* Tabs */}
-          <div className="w-full space-y-4">
-            <div className="flex gap-2 glass-effect p-2 rounded-xl w-full max-w-full overflow-x-auto shadow-lg">
-              {["trade","holdings","news","stocks"].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-2 px-3 rounded-lg transition-all font-semibold text-sm ${
-                    activeTab === tab
-                      ? "bg-gradient-to-r from-[#fbbf24] to-[#ffd700] text-black shadow-xl scale-105"
-                      : "text-yellow-300 hover:bg-yellow-900/30 hover:scale-102"
-                  }`}
-                >
-                  {{
-                    trade: <><TrendingUp className="inline mr-1" size={14} />Trade</>,
-                    holdings: <><BarChart3 className="inline mr-1" size={14} />Holdings</>,
-                    news: <><Newspaper className="inline mr-1" size={14} />News</>,
-                    stocks: <><TrendingUp className="inline mr-1" size={14} />Stocks</>,
-                  }[tab]}
-                </button>
-              ))}
-            </div>
+          <div className="grid gap-4 md:grid-cols-2 mb-4">
+            <section className="glass-effect rounded-xl p-4 animate-fadein">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="text-[#E8C77A]" size={20} />
+                <h2 className="text-lg font-semibold text-white">Crisis Status</h2>
+              </div>
 
-            {/* Tab Content */}
-            <div className="bg-[#191919]/80 backdrop-blur-sm rounded-lg border border-yellow-800/50 p-3 sm:p-4 animate-fadein w-full max-w-full overflow-x-auto" key={tabContentKey}>
-              {/* --- Trade Tab --- */}
-              {activeTab === "trade" && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-3">Trade Stocks</h2>
-                  <div className="flex flex-col gap-3">
-                    <div>
-                      <label className="block text-sm text-yellow-300 mb-1">Select Stock</label>
-                      <select
-                        value={selectedStock}
-                        onChange={(e) => setSelectedStock(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg bg-[#191919]/50 text-white border border-yellow-800 focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all"
-                      >
-                        <option value="">Choose a stock</option>
-                        {stocks.map(s => (
-                          s?.id && s?.StockName && s?.StockValue != null ? (
-                            <option key={s.id} value={s.id}>
-                              {s.StockName} - ${s.StockValue}
-                            </option>
-                          ) : null
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm text-yellow-300 mb-1">Quantity</label>
-                      <input
-                        type="number"
-                        placeholder="Enter quantity"
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        min="1"
-                        className="w-full px-4 py-3 rounded-lg bg-[#191919]/50 text-white border border-yellow-800 focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all"
-                      />
-                    </div>
-
-                    {/* Order Summary */}
-                    {selectedStockData && quantity && (
-                      <div className="glass-effect rounded-xl p-3 shadow-lg animate-fadein">
-                        <h3 className="text-base font-bold text-white mb-2">Order Summary</h3>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-xs sm:text-sm">
-                            <span className="text-yellow-300">Stock Price:</span>
-                            <span className="font-bold text-white">${selectedStockData.StockValue}</span>
-                          </div>
-                          <div className="flex justify-between text-xs sm:text-sm">
-                            <span className="text-yellow-300">Quantity:</span>
-                            <span className="font-bold text-white">{quantity}</span>
-                          </div>
-                          <div className="border-t border-yellow-800/50 my-2"></div>
-                          <div className="flex justify-between items-center bg-black/30 rounded-lg p-2">
-                            <span className="text-yellow-300 font-semibold text-sm">Total Cost:</span>
-                            <span className="font-bold text-xl text-[#fbbf24]">${totalCost.toLocaleString()}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2 justify-center">
-                      <div onClick={handleBuy}>
-                        <Button
-                          text={loading ? "Buying..." : "Buy"}
-                          color="#191919"
-                          textColor="#fff"
-                          glowColor="#fbbf24"
-                          rippleColor="rgba(255,207,36,0.2)"
-                          className="shadow-[0_0_10px_2px_#fbbf24] mx-0.5"
-                        />
-                      </div>
-                      <div onClick={handleSell}>
-                        <Button
-                          text={loading ? "Selling..." : "Sell"}
-                          color="#191919"
-                          textColor="#fff"
-                          glowColor="#fbbf24"
-                          rippleColor="rgba(255,207,36,0.2)"
-                          className="shadow-[0_0_10px_2px_#fbbf24] mx-0.5"
-                        />
-                      </div>
-                    </div>
+              {!crisis ? (
+                <p className="text-sm" style={{ color: "#D3C3C5" }}>
+                  No crisis is active right now. Check back when the organizers start the next round.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-semibold text-[#F3D393]">{crisis.title}</p>
+                    <p className="text-sm mt-1" style={{ color: "#D3C3C5" }}>
+                      {crisisStatusLabel()}
+                    </p>
                   </div>
-                </div>
-              )}
 
-              {/* --- Holdings Tab --- */}
-              {activeTab === "holdings" && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-3">Your Holdings</h2>
-                  {holdings.length === 0 ? (
-                    <div className="text-center py-8 text-yellow-400">
-                      <BarChart3 size={40} className="mx-auto mb-3 opacity-50" />
-                      <p className="text-sm">No stocks in your portfolio yet</p>
-                      <p className="text-xs mt-1">Start trading to build your portfolio!</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {holdings.map((holding) => {
-                        const stock = stocks.find(s => s.id === holding.stockId);
-                        const isLiveBidStock = holding.stockId.startsWith("bid:");
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span
+                      className={`px-2 py-0.5 rounded-full capitalize border ${
+                        crisis.status === "active"
+                          ? "bg-green-600/30 text-green-200 border-green-500/50"
+                          : crisis.status === "locked"
+                          ? "bg-yellow-600/30 text-yellow-200 border-yellow-500/50"
+                          : crisis.status === "revealed"
+                          ? "bg-blue-600/30 text-blue-200 border-blue-500/50"
+                          : "bg-white/10 text-[#D3C3C5] border-white/20"
+                      }`}
+                    >
+                      {crisis.status}
+                    </span>
+                    {submitted ? (
+                      <span className="flex items-center gap-1 text-green-300">
+                        <CheckCircle2 size={12} /> Submitted
+                      </span>
+                    ) : (
+                      <span className="text-yellow-200">Not submitted</span>
+                    )}
+                  </div>
 
-                        if (isLiveBidStock) {
-                          const currentValue = holding.avgPrice * holding.quantity;
-                          return (
-                            <div key={holding.stockId} className="holding-card border border-yellow-800/50 rounded-xl p-3 transition-all duration-300 shadow-lg relative">
-                              <div className="absolute top-2 right-2 px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/50 rounded-full">
-                                <span className="text-[10px] font-semibold text-yellow-300">LIVE BID</span>
-                              </div>
-                              <div className="flex justify-between items-start mb-2">
-                                <div>
-                                  <h3 className="text-lg font-bold text-white mb-0.5">{holding.stockName}</h3>
-                                  <p className="text-xs text-yellow-300">{holding.quantity} shares</p>
-                                </div>
-                                <div className="text-right mt-5">
-                                  <div className="text-lg font-bold text-[#fbbf24]">${currentValue.toLocaleString()}</div>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="bg-black/20 rounded-lg p-2">
-                                  <div className="text-yellow-400 mb-0.5">Purchase Price</div>
-                                  <div className="font-bold text-white">${holding.avgPrice.toFixed(2)}</div>
-                                </div>
-                                <div className="bg-black/20 rounded-lg p-2">
-                                  <div className="text-yellow-400 mb-0.5">Total Value</div>
-                                  <div className="font-bold text-white">${currentValue.toLocaleString()}</div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        } else if (stock) {
-                          const currentValue = stock.StockValue * holding.quantity;
-                          const change = ((stock.StockValue - holding.avgPrice) / holding.avgPrice) * 100;
-                          return (
-                            <div key={holding.stockId} className="holding-card border border-yellow-800/50 rounded-xl p-3 transition-all duration-300 shadow-lg">
-                              <div className="flex justify-between items-start mb-2">
-                                <div>
-                                  <h3 className="text-lg font-bold text-white mb-0.5">{stock.StockName}</h3>
-                                  <p className="text-xs text-yellow-300">{holding.quantity} shares</p>
-                                </div>
-                                <div className="text-right mt-5">
-                                  <div className={`text-lg font-bold ${change >= 0 ? "text-green-400" : "text-red-400"}`}>
-                                    ${currentValue.toLocaleString()}
-                                  </div>
-                                  <div className="text-xs text-yellow-300">{change.toFixed(2)}%</div>
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="bg-black/20 rounded-lg p-2">
-                                  <div className="text-yellow-400 mb-0.5">Purchase Price</div>
-                                  <div className="font-bold text-white">${holding.avgPrice.toFixed(2)}</div>
-                                </div>
-                                <div className="bg-black/20 rounded-lg p-2">
-                                  <div className="text-yellow-400 mb-0.5">Current Price</div>
-                                  <div className="font-bold text-white">${stock.StockValue.toFixed(2)}</div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })}
+                  {crisis.status === "active" && crisis.timer && !crisis.timer.openEnded && (
+                    <div className="flex items-center gap-2 text-[#F3D393] font-semibold text-sm">
+                      <Clock size={14} />
+                      <span>Time remaining:</span>
+                      <Countdown timer={crisis.timer} />
                     </div>
                   )}
+
+                  <Link
+                    href="/crisis"
+                    className="inline-flex items-center gap-2 mt-1 px-4 py-2 rounded-xl font-semibold transition-all hover:scale-105"
+                    style={{ backgroundColor: "#E8C77A", color: "#241006", boxShadow: "0 0 10px rgba(232,199,122,0.35)" }}
+                  >
+                    {crisis.status === "active" && !submitted ? "Enter Crisis Decision" : "View Crisis"}
+                    <ArrowRight size={16} />
+                  </Link>
                 </div>
               )}
 
-              {/* --- News Tab --- */}
-              {activeTab === "news" && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-3">Market News</h2>
-                  <div className="space-y-2">
-                    {news.map(n => (
-                      <div key={n.id} className="glass-effect rounded-xl p-3 shadow-lg transition-all hover:scale-102 cursor-pointer">
-                        <h3 className="font-bold text-white text-base">{n.title}</h3>
-                        <p className="text-yellow-300 text-sm mt-1">{n.summary}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {!crisis && (
+                <Link
+                  href="/crisis"
+                  className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl font-semibold transition-all hover:scale-105"
+                  style={{ backgroundColor: "#E8C77A", color: "#241006", boxShadow: "0 0 10px rgba(232,199,122,0.35)" }}
+                >
+                  Open Crisis Page
+                  <ArrowRight size={16} />
+                </Link>
               )}
+            </section>
 
-              {/* --- Stocks Tab --- */}
-              {activeTab === "stocks" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {stocks.map(stock => (
-                    <div key={stock.id} className="stock-card glass-effect rounded-xl p-3 transition-all cursor-pointer">
-                      <h3 className="font-bold text-white text-lg mb-1">{stock.StockName}</h3>
-                      <p className="text-yellow-300 text-sm">Price: ${stock.StockValue}</p>
-                      <p className={`text-xs ${stock?.change >= 0 ? "text-green-400" : "text-red-400"}`}>
-                      {typeof stock?.change === "number" ? stock.change.toFixed(2) : "0.00"}%</p>
+            <section className="glass-effect rounded-xl p-4 animate-fadein">
+              <div className="flex items-center gap-2 mb-3">
+                <Newspaper className="text-[#E8C77A]" size={20} />
+                <h2 className="text-lg font-semibold text-white">Crisis Updates</h2>
+              </div>
+              {news.length === 0 ? (
+                <p className="text-sm" style={{ color: "#D3C3C5" }}>No crisis updates yet.</p>
+              ) : (
+                <div className="space-y-2 max-h-[28rem] overflow-y-auto pr-1">
+                  {news.map((n) => (
+                    <div key={n.id} className="bg-black/20 border border-[#3D171E] rounded-xl p-3">
+                      <h3 className="font-bold text-white text-sm sm:text-base">{n.title}</h3>
+                      <p className="text-sm mt-1" style={{ color: "#D3C3C5" }}>{n.body || n.summary}</p>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </section>
           </div>
         </div>
       </main>

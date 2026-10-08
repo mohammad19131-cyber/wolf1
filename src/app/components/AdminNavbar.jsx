@@ -1,33 +1,32 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Users, TrendingUp, LayoutDashboard, Trophy } from "lucide-react";
+import { Users, LayoutDashboard, Trophy, AlertTriangle } from "lucide-react";
 import Image from "next/image";
+import AdminCompetitionBar from "./AdminCompetitionBar";
 
 export default function AdminNavbar() {
   const pathname = usePathname();
   
   const navItems = [
     { href: "/admin", label: "Users", icon: Users },
-    { href: "/admin/stocks", label: "Stocks", icon: TrendingUp },
-    { href: "/admin/news", label: "News", icon: LayoutDashboard },
-    { href: "/admin/livebids", label: "Live Bids", icon: TrendingUp },
+    { href: "/admin/crisis", label: "Crisis", icon: AlertTriangle },
+    { href: "/admin/news", label: "Crisis Updates", icon: LayoutDashboard },
     { href: "/admin/leaderboard", label: "Leaderboard", icon: Trophy },
   ];
 
   return (
-    <nav className="border-b backdrop-blur-sm sticky top-0 z-50" style={{ backgroundColor: '#191919', borderColor: '#cc980f' }}>
+    <nav className="border-b backdrop-blur-sm sticky top-0 z-50" style={{ backgroundColor: 'rgba(48,13,19,0.88)', borderColor: 'rgba(232,199,122,0.22)' }}>
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
 
           <div className="flex items-center gap-2">
             <div className="w-12 h-12 rounded-lg flex items-center justify-center">
-              <Image src="/assets/emp.png" alt="Emp Logo" width={48} height={48} className="text-white" />
+              <Image src="/assets/emp.png" alt="Wolf of Tech Street logo" width={48} height={48} className="text-white" />
             </div>
-            <span className="text-xl font-bold" style={{ color: '#cc980f' }}>
-              Investomania - ABC XIII
+            <span className="text-xl font-bold" style={{ color: '#F3D393' }}>
+              Wolf of Tech Street <span className="hidden sm:inline" style={{ color: '#D3C3C5', fontWeight: 500 }}>— ACSEC XI</span>
             </span>
           </div>
-
 
           <div className="flex gap-2">
             {navItems.map((item) => {
@@ -45,7 +44,7 @@ export default function AdminNavbar() {
                       : "hover:bg-white/5 hover:text-white"
                     }
                   `}
-                  style={isActive ? { backgroundColor: '#cc980f', color: '#191919', boxShadow: '0 0 10px rgba(204,152,15,0.5)' } : { color: '#cc980f' }}
+                  style={isActive ? { backgroundColor: '#E8C77A', color: '#241006', boxShadow: '0 0 10px rgba(232,199,122,0.5)' } : { color: '#F3D393' }}
                 >
                   <Icon size={18} />
                   <span className="hidden sm:inline">{item.label}</span>
@@ -55,6 +54,7 @@ export default function AdminNavbar() {
           </div>
         </div>
       </div>
+      <AdminCompetitionBar />
     </nav>
   );
 }

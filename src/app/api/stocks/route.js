@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "../../lib/supabase";
+import { createServerClient, hasSupabaseConfig } from "../../lib/supabase";
+import { requireAdmin } from "../../lib/auth";
 
 export async function GET() {
 	try {
+		if (!hasSupabaseConfig()) {
+			return NextResponse.json({ stocks: [] });
+		}
+
 		const supabase = createServerClient();
 		
 		const { data: stocks, error } = await supabase
@@ -24,10 +29,17 @@ export async function GET() {
 
 export async function POST(req) {
 	try {
+		const { response } = await requireAdmin(req);
+		if (response) return response;
+
 		const { StockName, StockValue } = await req.json();
 		
 		if (!StockName || StockValue == null) {
 			return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+		}
+
+		if (!hasSupabaseConfig()) {
+			return NextResponse.json({ error: "Database is not configured" }, { status: 503 });
 		}
 
 		const supabase = createServerClient();
@@ -52,10 +64,17 @@ export async function POST(req) {
 
 export async function PUT(req) {
 	try {
+		const { response } = await requireAdmin(req);
+		if (response) return response;
+
 		const { id, StockValue } = await req.json();
 		
 		if (!id || StockValue == null) {
 			return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+		}
+
+		if (!hasSupabaseConfig()) {
+			return NextResponse.json({ error: "Database is not configured" }, { status: 503 });
 		}
 
 		const supabase = createServerClient();
@@ -81,10 +100,17 @@ export async function PUT(req) {
 
 export async function DELETE(req) {
 	try {
+		const { response } = await requireAdmin(req);
+		if (response) return response;
+
 		const { id } = await req.json();
 		
 		if (!id) {
 			return NextResponse.json({ error: "Missing id" }, { status: 400 });
+		}
+
+		if (!hasSupabaseConfig()) {
+			return NextResponse.json({ error: "Database is not configured" }, { status: 503 });
 		}
 
 		const supabase = createServerClient();

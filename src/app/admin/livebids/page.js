@@ -2,18 +2,22 @@
 import { useState, useEffect } from "react";
 import { Play, Square, Award, RefreshCw, TrendingUp, Users, DollarSign } from "lucide-react";
 import AdminNavbar from "../../components/AdminNavbar";
+import Countdown from "../../components/Countdown";
 
 export default function AdminLiveBidsPage() {
   const [bids, setBids] = useState([]);
   const [stockName, setStockName] = useState("");
   const [value, setValue] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [durationSeconds, setDurationSeconds] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
     fetchBids();
+    const id = setInterval(() => fetchBids(true), 5000);
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
@@ -26,12 +30,12 @@ export default function AdminLiveBidsPage() {
     }
   }, [error, success]);
 
-  async function fetchBids() {
-    setLoading(true);
+  async function fetchBids(quiet = false) {
+    if (!quiet) setLoading(true);
     const res = await fetch("/api/livebids");
     const data = await res.json();
     setBids(data.bids || []);
-    setLoading(false);
+    if (!quiet) setLoading(false);
   }
 
   async function createBid() {
@@ -42,10 +46,16 @@ export default function AdminLiveBidsPage() {
     const res = await fetch("/api/livebids", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stockName, value: Number(value), quantity: Number(quantity) })
+      body: JSON.stringify({
+        stockName,
+        value: Number(value),
+        quantity: Number(quantity),
+        durationSeconds: durationSeconds ? Number(durationSeconds) : undefined,
+      })
     });
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setError("Failed to create bid");
+      setError(data.error || "Failed to create bid");
       setLoading(false);
       return;
     }
@@ -53,6 +63,7 @@ export default function AdminLiveBidsPage() {
     setStockName(""); 
     setValue(""); 
     setQuantity("");
+    setDurationSeconds("");
     setLoading(false);
     fetchBids();
   }
@@ -60,12 +71,14 @@ export default function AdminLiveBidsPage() {
 
   async function updateBid(id, action) {
     setLoading(true);
-    await fetch("/api/livebids", {
+    const res = await fetch("/api/livebids", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, action })
     });
+    const data = await res.json().catch(() => ({}));
     setLoading(false);
+    if (!res.ok) setError(data.error || "Failed to update bid");
     fetchBids();
   }
 
@@ -74,13 +87,14 @@ export default function AdminLiveBidsPage() {
     const res = await fetch(`/api/livebids?id=${id}`, {
       method: "DELETE",
     });
+    const data = await res.json().catch(() => ({}));
     setLoading(false);
-    if (res.ok) {
-      setSuccess("Bid deleted");
-      fetchBids();
-    } else {
-      setError("Failed to delete bid");
+    if (!res.ok) {
+      setError(data.error || "Failed to delete bid");
+      return;
     }
+    setSuccess("Bid deleted");
+    fetchBids();
   }
 
   async function awardBid(id) {
@@ -90,15 +104,15 @@ export default function AdminLiveBidsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, action: "award" })
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     setLoading(false);
     fetchBids();
-    if (data.success) setSuccess(`Awarded to ${data.winner}`);
+    if (res.ok && data.success) setSuccess(`Awarded to ${data.winner}`);
     else setError(data.error || "Award failed");
   }
 
   async function fetchBidUsers(id) {
-    const res = await fetch(`/api/livebids/admin?id=${id}`);
+    const res = await fetch(`/api/livebids/admin?id=${id}`, { credentials: "include" });
     const data = await res.json();
     return data.bids || [];
   }
@@ -109,14 +123,14 @@ export default function AdminLiveBidsPage() {
   return (
     <>
     <AdminNavbar />
-    <main className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-purple-800 font-sans text-white p-4 md:p-6">
+    <main className="min-h-screen bg-gradient-to-br from-[#0B0304] via-[#1B080C] to-[#2A0B10] font-sans text-white p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
 
         <header className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold mb-1 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold mb-1 bg-gradient-to-r from-[#E8C77A] to-[#F5DFA3] bg-clip-text text-transparent">
             Live Bidding Dashboard
           </h1>
-          <p className="text-purple-300 text-sm">Create and manage live stock bidding sessions</p>
+          <p className="text-sm" style={{ color: '#D3C3C5' }}>Create and manage live stock bidding sessions</p>
         </header>
 
   
@@ -132,13 +146,13 @@ export default function AdminLiveBidsPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-gradient-to-br from-purple-600/30 to-pink-600/30 backdrop-blur-sm rounded-lg border border-purple-500/50 p-4">
+          <div className="bg-gradient-to-br from-[#42121B]/60 to-[#23080D]/80 backdrop-blur-sm rounded-lg border border-[#E8C77A]/30 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-300 text-xs mb-1">Total Bids</p>
+                <p className="text-xs mb-1" style={{ color: '#D3C3C5' }}>Total Bids</p>
                 <p className="text-2xl font-bold">{bids.length}</p>
               </div>
-              <TrendingUp className="text-purple-400" size={28} />
+              <TrendingUp className="text-[#E8C77A]" size={28} />
             </div>
           </div>
           
@@ -166,50 +180,61 @@ export default function AdminLiveBidsPage() {
         <div className="grid lg:grid-cols-3 gap-6">
 
           <div className="lg:col-span-1">
-            <div className="bg-purple-950/50 backdrop-blur-sm rounded-lg border border-purple-700/50 p-4 sticky top-4">
+            <div className="bg-[#1B080C]/60 backdrop-blur-sm rounded-lg border border-[#3D171E] p-4 sticky top-4">
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <Award className="text-purple-400" size={20} />
+                <Award className="text-[#E8C77A]" size={20} />
                 Create New Bid
               </h2>
               
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs text-purple-300 mb-1">Stock Name</label>
+                  <label className="block text-xs mb-1" style={{ color: '#D3C3C5' }}>Stock Name</label>
                   <input
                     type="text"
                     placeholder="e.g., AAPL"
                     value={stockName}
                     onChange={e => setStockName(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-xs text-purple-300 mb-1">Starting Value ($)</label>
+                  <label className="block text-xs mb-1" style={{ color: '#D3C3C5' }}>Starting Value ($)</label>
                   <input
                     type="number"
                     placeholder="150"
                     value={value}
                     onChange={e => setValue(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-xs text-purple-300 mb-1">Quantity</label>
+                  <label className="block text-xs mb-1" style={{ color: '#D3C3C5' }}>Quantity</label>
                   <input
                     type="number"
                     placeholder="100"
                     value={quantity}
                     onChange={e => setQuantity(e.target.value)}
-                    className="w-full px-3 py-2 text-sm rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: '#D3C3C5' }}>Duration (seconds, optional)</label>
+                  <input
+                    type="number"
+                    placeholder="Leave empty for manual stop"
+                    value={durationSeconds}
+                    onChange={e => setDurationSeconds(e.target.value)}
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                   />
                 </div>
                 
                 <button
                   onClick={createBid}
                   disabled={loading}
-                  className="w-full px-4 py-2 text-sm bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/50"
+                  className="w-full px-4 py-2 text-sm bg-gradient-to-r from-[#E8C77A] to-[#F5DFA3] hover:brightness-110 text-[#241006] rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#E8C77A]/30"
                 >
                   {loading ? "Creating..." : "Create Bid"}
                 </button>
@@ -220,13 +245,13 @@ export default function AdminLiveBidsPage() {
           <div className="lg:col-span-2">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
-                <TrendingUp className="text-purple-400" size={20} />
+                <TrendingUp className="text-[#E8C77A]" size={20} />
                 Bidding Sessions
               </h2>
               <button
                 onClick={fetchBids}
                 disabled={loading}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-900/50 hover:bg-purple-800/50 rounded-lg transition-all border border-purple-700/50 disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[#2A0B10]/60 hover:bg-[#2A0B10]/80 rounded-lg transition-all border border-[#3D171E] disabled:opacity-50"
               >
                 <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
                 Refresh
@@ -234,14 +259,14 @@ export default function AdminLiveBidsPage() {
             </div>
 
             {loading && bids.length === 0 ? (
-              <div className="text-center py-8 text-purple-400">
+              <div className="text-center py-8 text-[#E8C77A]">
                 <RefreshCw className="animate-spin mx-auto mb-3" size={28} />
                 <p className="text-sm">Loading bids...</p>
               </div>
             ) : bids.length === 0 ? (
-              <div className="text-center py-8 bg-purple-950/30 rounded-lg border border-purple-700/30">
-                <TrendingUp className="mx-auto mb-3 text-purple-600" size={40} />
-                <p className="text-purple-400 text-sm">No bids created yet</p>
+              <div className="text-center py-8 bg-[#1B080C]/40 rounded-lg border border-[#3D171E]">
+                <TrendingUp className="mx-auto mb-3 text-[#5C232D]" size={40} />
+                <p className="text-[#F3D393] text-sm">No bids created yet</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -272,7 +297,7 @@ function BidCard({ bid, updateBid, awardBid, fetchBidUsers, deleteBid, loading }
   const statusColors = {
     active: "from-green-600/30 to-emerald-600/30 border-green-500/50",
     inactive: "from-yellow-600/30 to-orange-600/30 border-yellow-500/50",
-    awarded: "from-blue-600/30 to-purple-600/30 border-blue-500/50"
+    awarded: "from-blue-600/30 to-[#E8C77A]/20 border-blue-500/50"
   };
 
   const statusIcons = {
@@ -290,15 +315,20 @@ function BidCard({ bid, updateBid, awardBid, fetchBidUsers, deleteBid, loading }
             <span className="flex items-center gap-1 px-2 py-0.5 bg-white/10 rounded-full text-xs font-semibold capitalize">
               {statusIcons[bid.status]}
               {bid.status}
+              {bid.status === "active" && bid.timer && !bid.timer.openEnded && (
+                <span>
+                  <Countdown timer={bid.timer} />
+                </span>
+              )}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-black/20 rounded-lg p-2">
-              <p className="text-purple-300 text-xs">Value</p>
+              <p className="text-xs" style={{ color: '#D3C3C5' }}>Value</p>
               <p className="text-lg font-bold">${bid.value}</p>
             </div>
             <div className="bg-black/20 rounded-lg p-2">
-              <p className="text-purple-300 text-xs">Quantity</p>
+              <p className="text-xs" style={{ color: '#D3C3C5' }}>Quantity</p>
               <p className="text-lg font-bold">{bid.quantity}</p>
             </div>
           </div>
@@ -336,7 +366,7 @@ function BidCard({ bid, updateBid, awardBid, fetchBidUsers, deleteBid, loading }
             <button
               onClick={() => awardBid(bid.id)}
               disabled={loading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-purple-600 hover:bg-purple-700 rounded-lg transition-all disabled:opacity-50 whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#E8C77A] hover:bg-[#F5DFA3] text-[#241006] rounded-lg transition-all disabled:opacity-50 whitespace-nowrap"
             >
               <Award size={14} />
               Award
@@ -362,7 +392,7 @@ function BidCard({ bid, updateBid, awardBid, fetchBidUsers, deleteBid, loading }
         </div>
       </div>
       <div className="pt-3 border-t border-white/10">
-        <div className="flex items-center gap-1.5 mb-2 text-purple-300">
+        <div className="flex items-center gap-1.5 mb-2" style={{ color: '#D3C3C5' }}>
           <Users size={14} />
           <strong className="text-xs">User Bids</strong>
         </div>
@@ -385,14 +415,14 @@ function BidUsersList({ bidId, fetchBidUsers }) {
   }, [bidId]);
 
   if (loading) {
-    return <div className="text-purple-400 text-xs">Loading bids...</div>;
+    return <div className="text-[#E8C77A] text-xs">Loading bids...</div>;
   }
 
   if (!users.length) {
     return (
-      <div className="text-center py-3 bg-purple-900/30 rounded-lg border border-purple-700/30">
-        <Users className="mx-auto mb-1 text-purple-600" size={20} />
-        <p className="text-purple-400 text-xs">No bids yet</p>
+      <div className="text-center py-3 bg-[#1B080C]/40 rounded-lg border border-[#3D171E]">
+        <Users className="mx-auto mb-1 text-[#5C232D]" size={20} />
+        <p className="text-xs" style={{ color: '#D3C3C5' }}>No bids yet</p>
       </div>
     );
   }
@@ -402,10 +432,10 @@ function BidUsersList({ bidId, fetchBidUsers }) {
       {users.map((b, i) => (
         <div
           key={i}
-          className="flex justify-between items-center p-2 bg-purple-900/30 hover:bg-purple-900/50 rounded-lg border border-purple-700/30 transition-all"
+          className="flex justify-between items-center p-2 bg-[#1B080C]/40 hover:bg-[#1B080C]/60 rounded-lg border border-[#3D171E] transition-all"
         >
           <span className="font-medium text-sm">{b.user}</span>
-          <span className="text-purple-300 font-bold text-sm">${b.value}</span>
+          <span className="font-bold text-sm text-[#F3D393]">${b.value}</span>
         </div>
       ))}
     </div>

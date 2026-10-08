@@ -1,13 +1,53 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "../../lib/supabase";
+import bcrypt from "bcryptjs";
+import { createServerClient, hasSupabaseConfig } from "../../lib/supabase";
 import { createAuthToken } from "../../lib/auth";
+import { findLocalUser } from "../../lib/localUsers";
+
+function getAdminUsername() {
+	return process.env.ADMIN_USERNAME || "";
+}
+
+function getAdminPassword() {
+	return process.env.ADMIN_PASSWORD || "";
+}
+
+function isBcryptHash(value) {
+	return typeof value === "string" && /^\$2[aby]\$/.test(value);
+}
+
+async function passwordsMatch(stored, provided) {
+	if (!stored || !provided) return false;
+	if (isBcryptHash(stored)) {
+		return bcrypt.compare(provided, stored);
+	}
+	return stored === provided;
+}
+
+async function loginSuccess(username, { isAdmin = false, balance = 10000, stocks = [] } = {}) {
+	const token = await createAuthToken(username, isAdmin);
+	const response = NextResponse.json({
+		success: true,
+		user: { username, balance, stocks },
+		tokenType: isAdmin ? "admin" : "user",
+	});
+
+	response.cookies.set("auth_token", token, {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "strict",
+		path: "/",
+		maxAge: 60 * 60 * 24 * 7,
+	});
+
+	return response;
+}
 
 export async function POST(req) {
 	try {
 		const { username, password } = await req.json();
 
 		if (!username || !password) {
-			console.error("Login error: Missing username or password");
 			return NextResponse.json(
 				{ error: "Missing username or password" },
 				{ status: 400 }
@@ -17,9 +57,34 @@ export async function POST(req) {
 		const cleanUsername = username.trim();
 		const cleanPassword = password.trim();
 
-		const supabase = createServerClient();
+		const adminUsername = getAdminUsername();
+		const adminPassword = getAdminPassword();
+		if (
+			adminUsername &&
+			adminPassword &&
+			cleanUsername === adminUsername &&
+			cleanPassword === adminPassword
+		) {
+			return await loginSuccess(cleanUsername, { isAdmin: true });
+		}
 
-		// Fetch user
+		if (!hasSupabaseConfig()) {
+			const localUser = findLocalUser(cleanUsername);
+			if (localUser && localUser.password === cleanPassword) {
+				return await loginSuccess(localUser.username, {
+					isAdmin: false,
+					balance: localUser.balance,
+					stocks: localUser.stocks,
+				});
+			}
+
+			return NextResponse.json(
+				{ error: "Invalid credentials" },
+				{ status: 401 }
+			);
+		}
+
+		const supabase = createServerClient();
 		const { data: user, error } = await supabase
 			.from("users")
 			.select("*")
@@ -27,58 +92,32 @@ export async function POST(req) {
 			.single();
 
 		if (error || !user) {
-			console.error("Login error: User not found", error?.message);
 			return NextResponse.json(
 				{ error: "Invalid credentials" },
 				{ status: 401 }
 			);
 		}
 
-		// ✅ PLAIN TEXT PASSWORD CHECK (TEMPORARY)
-		if (user.password !== cleanPassword) {
-			console.error("Login error: Password mismatch");
+		const matches = await passwordsMatch(user.password, cleanPassword);
+		if (!matches) {
 			return NextResponse.json(
 				{ error: "Invalid credentials" },
 				{ status: 401 }
 			);
 		}
 
-		// Admin check (optional)
-		let tokenType = "user";
-		let isAdmin = false;
-		if (
-			cleanUsername === "StonksAdmin" &&
-			cleanPassword === "StonksAdmin4321!"
-		) {
-			tokenType = "admin";
-			isAdmin = true;
-		}
-
-		const token = createAuthToken(user.username, isAdmin);
-
-		const response = NextResponse.json({
-			success: true,
-			user: {
-				username: user.username,
-				balance: user.balance ?? 10000,
-				stocks: user.stocks ?? [],
-			},
-			tokenType,
+		return await loginSuccess(user.username, {
+			isAdmin: false,
+			balance: user.balance ?? 10000,
+			stocks: user.stocks ?? [],
 		});
-
-		response.cookies.set("auth_token", token, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "strict",
-			path: "/",
-			maxAge: 60 * 60 * 24 * 7, // 7 days
-		});
-
-		return response;
 	} catch (error) {
 		console.error("Login error:", error);
+		const message = error?.message?.includes("AUTH_SECRET")
+			? "Server is misconfigured (missing AUTH_SECRET). Contact the administrator."
+			: "Network error";
 		return NextResponse.json(
-			{ error: "Network error" },
+			{ error: message },
 			{ status: 500 }
 		);
 	}

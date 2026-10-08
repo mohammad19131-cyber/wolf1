@@ -110,15 +110,15 @@ export default function AdminPage() {
   return (
     <>
       <AdminNavbar />
-      <main className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-purple-800 font-sans text-white p-4 md:p-8">
+      <main className="min-h-screen bg-gradient-to-br from-[#0B0304] via-[#1B080C] to-[#2A0B10] font-sans text-white p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
 
         <header className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-[#E8C77A] to-[#F5DFA3] bg-clip-text text-transparent">
               Users Admin
             </h1>
-            <p className="text-purple-300 text-sm md:text-base">Manage users and balances</p>
+            <p className="text-sm md:text-base" style={{ color: '#D3C3C5' }}>Manage users and balances</p>
           </div>
           <button
             onClick={handleLogout}
@@ -145,14 +145,15 @@ export default function AdminPage() {
 
           <div className="md:col-span-2 space-y-6">
 
-            <div className="flex gap-2 bg-purple-950/50 p-2 rounded-lg backdrop-blur-sm border border-purple-700/50">
+            <div className="flex gap-2 bg-[#1B080C]/60 p-2 rounded-lg backdrop-blur-sm border border-[#3D171E]">
               <button
                 onClick={() => setActiveTab("add")}
                 className={`flex-1 py-2 px-4 rounded-md transition-all ${
                   activeTab === "add"
-                    ? "bg-purple-600 text-white shadow-lg shadow-purple-500/50"
-                    : "text-purple-300 hover:bg-purple-800/50"
+                    ? "bg-[#E8C77A] text-[#241006] shadow-lg shadow-[#E8C77A]/30"
+                    : "hover:bg-[#2A0B10]/60"
                 }`}
+                style={activeTab !== "add" ? { color: '#D3C3C5' } : undefined}
               >
                 Add User
               </button>
@@ -160,9 +161,10 @@ export default function AdminPage() {
                 onClick={() => setActiveTab("update")}
                 className={`flex-1 py-2 px-4 rounded-md transition-all ${
                   activeTab === "update"
-                    ? "bg-purple-600 text-white shadow-lg shadow-purple-500/50"
-                    : "text-purple-300 hover:bg-purple-800/50"
+                    ? "bg-[#E8C77A] text-[#241006] shadow-lg shadow-[#E8C77A]/30"
+                    : "hover:bg-[#2A0B10]/60"
                 }`}
+                style={activeTab !== "update" ? { color: '#D3C3C5' } : undefined}
               >
                 Update
               </button>
@@ -170,61 +172,61 @@ export default function AdminPage() {
                 onClick={() => setActiveTab("delete")}
                 className={`flex-1 py-2 px-4 rounded-md transition-all ${
                   activeTab === "delete"
-                    ? "bg-purple-600 text-white shadow-lg shadow-purple-500/50"
-                    : "text-purple-300 hover:bg-purple-800/50"
+                    ? "bg-[#E8C77A] text-[#241006] shadow-lg shadow-[#E8C77A]/30"
+                    : "hover:bg-[#2A0B10]/60"
                 }`}
+                style={activeTab !== "delete" ? { color: '#D3C3C5' } : undefined}
               >
                 Delete
               </button>
             </div>
 
-
-            <div className="bg-purple-950/50 backdrop-blur-sm rounded-lg border border-purple-700/50 p-6">
+            <div className="bg-[#1B080C]/60 backdrop-blur-sm rounded-lg border border-[#3D171E] p-6">
               {activeTab === "add" && (
                 <div>
                   <h2 className="text-2xl font-semibold mb-4">Add New User</h2>
                   <div className="flex flex-col gap-4">
                     <div>
-                      <label className="block text-sm text-purple-300 mb-1">username</label>
+                      <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>username</label>
                       <input
                         type="text"
                         placeholder="Enter username"
                         value={newUser.username}
                         onChange={e => setNewUser(u => ({ ...u, username: e.target.value }))}
-                        className="w-full px-4 py-3 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                        className="w-full px-4 py-3 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-purple-300 mb-1">Password</label>
+                      <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>Password</label>
                       <div className="relative">
                         <input
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter password"
                           value={newUser.password}
                           onChange={e => setNewUser(u => ({ ...u, password: e.target.value }))}
-                          className="w-full px-4 py-3 pr-12 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                          className="w-full px-4 py-3 pr-12 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-200 transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#E8C77A] hover:text-[#F5DFA3] transition-colors"
                         >
                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm text-purple-300 mb-1">Initial Balance</label>
+                      <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>Initial Balance</label>
                       <input
                         type="number"
                         placeholder="10000"
                         value={newUser.balance}
                         onChange={e => setNewUser(u => ({ ...u, balance: e.target.value }))}
-                        className="w-full px-4 py-3 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                        className="w-full px-4 py-3 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                       />
                     </div>
                     <div onClick={handleAddUser}>
-                      <Button text={loading ? "Adding..." : "Add User"} color="#4b006e" textColor="#fff" glowColor="#ff00cc" rippleColor="rgba(255,255,255,0.2)" />
+                      <Button text={loading ? "Adding..." : "Add User"} color="#E8C77A" textColor="#241006" glowColor="#F5DFA3" rippleColor="rgba(36,16,6,0.2)" />
                     </div>
                   </div>
                 </div>
@@ -235,11 +237,11 @@ export default function AdminPage() {
                   <h2 className="text-2xl font-semibold mb-4">Update Balance</h2>
                   <div className="flex flex-col gap-4">
                     <div>
-                      <label className="block text-sm text-purple-300 mb-1">Select User</label>
+                      <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>Select User</label>
                       <select
                         value={selectedUser}
                         onChange={e => setSelectedUser(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                        className="w-full px-4 py-3 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                       >
                         <option value="">Choose a user</option>
                         {users.map(u => (
@@ -250,17 +252,17 @@ export default function AdminPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm text-purple-300 mb-1">New Balance</label>
+                      <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>New Balance</label>
                       <input
                         type="number"
                         placeholder="Enter new balance"
                         value={updateBalance}
                         onChange={e => setUpdateBalance(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                        className="w-full px-4 py-3 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                       />
                     </div>
                     <div onClick={handleUpdateBalance}>
-                      <Button text={loading ? "Updating..." : "Update Balance"} color="#4b006e" textColor="#fff" glowColor="#ff00cc" rippleColor="rgba(255,255,255,0.2)" />
+                      <Button text={loading ? "Updating..." : "Update Balance"} color="#E8C77A" textColor="#241006" glowColor="#F5DFA3" rippleColor="rgba(36,16,6,0.2)" />
                     </div>
                   </div>
                 </div>
@@ -271,11 +273,11 @@ export default function AdminPage() {
                   <h2 className="text-2xl font-semibold mb-4">Delete User</h2>
                   <div className="flex flex-col gap-4">
                     <div>
-                      <label className="block text-sm text-purple-300 mb-1">Select User</label>
+                      <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>Select User</label>
                       <select
                         value={selectedUser}
                         onChange={e => setSelectedUser(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                        className="w-full px-4 py-3 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                       >
                         <option value="">Choose a user to delete</option>
                         {users.map(u => (
@@ -289,7 +291,7 @@ export default function AdminPage() {
                       Warning: This action cannot be undone
                     </div>
                     <div onClick={handleDeleteUser}>
-                      <Button text={loading ? "Deleting..." : "Delete User"} color="#4b006e" textColor="#fff" glowColor="#ff00cc" rippleColor="rgba(255,255,255,0.2)" />
+                      <Button text={loading ? "Deleting..." : "Delete User"} color="#E8C77A" textColor="#241006" glowColor="#F5DFA3" rippleColor="rgba(36,16,6,0.2)" />
                     </div>
                   </div>
                 </div>
@@ -297,22 +299,21 @@ export default function AdminPage() {
             </div>
           </div>
 
-
           <div className="space-y-6">
 
-            <div className="bg-gradient-to-br from-purple-600/30 to-pink-600/30 backdrop-blur-sm rounded-lg border border-purple-500/50 p-6">
+            <div className="bg-gradient-to-br from-[#42121B]/70 to-[#23080D]/90 backdrop-blur-sm rounded-lg border border-[#E8C77A]/20 p-6">
               <h3 className="text-lg font-semibold mb-4">Statistics</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-purple-300">Total Users</span>
+                  <span style={{ color: '#D3C3C5' }}>Total Users</span>
                   <span className="text-2xl font-bold">{users.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-purple-300">Total Balance</span>
+                  <span style={{ color: '#D3C3C5' }}>Total Balance</span>
                   <span className="text-2xl font-bold">${totalBalance.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-purple-300">Avg Balance</span>
+                  <span style={{ color: '#D3C3C5' }}>Avg Balance</span>
                   <span className="text-2xl font-bold">
                     ${users.length ? Math.round(totalBalance / users.length).toLocaleString() : 0}
                   </span>
@@ -320,12 +321,12 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="bg-purple-950/50 backdrop-blur-sm rounded-lg border border-purple-700/50 p-6">
+            <div className="bg-[#1B080C]/60 backdrop-blur-sm rounded-lg border border-[#3D171E] p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">All Users</h3>
                 <button
                   onClick={fetchUsers}
-                  className="text-purple-300 hover:text-white transition-colors text-sm"
+                  className="text-[#F3D393] hover:text-white transition-colors text-sm"
                   disabled={loading}
                 >
                   {loading ? "Loading..." : "Refresh"}
@@ -333,17 +334,17 @@ export default function AdminPage() {
               </div>
               <div className="max-h-96 overflow-y-auto space-y-2">
                 {users.length === 0 ? (
-                  <div className="text-center text-purple-400 py-8">
+                  <div className="text-center py-8" style={{ color: '#D3C3C5' }}>
                     No users yet
                   </div>
                 ) : (
                   users.map(u => (
                     <div
                       key={u.username}
-                      className="flex justify-between items-center p-3 rounded-lg bg-purple-900/30 hover:bg-purple-900/50 transition-all border border-purple-700/30"
+                      className="flex justify-between items-center p-3 rounded-lg bg-[#2A0B10]/40 hover:bg-[#2A0B10]/60 transition-all border border-[#3D171E]/60"
                     >
                       <span className="font-medium">{u.username}</span>
-                      <span className="text-purple-300 font-semibold">
+                      <span className="font-semibold text-[#F3D393]">
                         ${u.balance.toLocaleString()}
                       </span>
                     </div>

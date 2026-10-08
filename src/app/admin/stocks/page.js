@@ -116,15 +116,15 @@ export default function StocksAdminPage() {
   return (
     <>
       <AdminNavbar />
-      <main className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-purple-800 font-sans text-white p-4 md:p-8">
+      <main className="min-h-screen bg-gradient-to-br from-[#0B0304] via-[#1B080C] to-[#2A0B10] font-sans text-white p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
 
           <header className="mb-8 flex justify-between items-center">
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
+              <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-[#E8C77A] to-[#F5DFA3] bg-clip-text text-transparent">
                 Stocks Admin
               </h1>
-              <p className="text-purple-300 text-sm md:text-base">Manage stocks and their values</p>
+              <p className="text-sm md:text-base" style={{ color: '#D3C3C5' }}>Manage stocks and their values</p>
             </div>
             <button
               onClick={handleLogout}
@@ -151,14 +151,15 @@ export default function StocksAdminPage() {
 
             <div className="md:col-span-2 space-y-6">
 
-              <div className="flex gap-2 bg-purple-950/50 p-2 rounded-lg backdrop-blur-sm border border-purple-700/50">
+              <div className="flex gap-2 bg-[#1B080C]/60 p-2 rounded-lg backdrop-blur-sm border border-[#3D171E]">
                 <button
                   onClick={() => setActiveTab("add")}
                   className={`flex-1 py-2 px-4 rounded-md transition-all ${
                     activeTab === "add"
-                      ? "bg-purple-600 text-white shadow-lg shadow-purple-500/50"
-                      : "text-purple-300 hover:bg-purple-800/50"
+                      ? "bg-[#E8C77A] text-[#241006] shadow-lg shadow-[#E8C77A]/30"
+                      : "hover:bg-[#2A0B10]/60"
                   }`}
+                  style={activeTab !== "add" ? { color: '#D3C3C5' } : undefined}
                 >
                   Add Stock
                 </button>
@@ -166,9 +167,10 @@ export default function StocksAdminPage() {
                   onClick={() => setActiveTab("update")}
                   className={`flex-1 py-2 px-4 rounded-md transition-all ${
                     activeTab === "update"
-                      ? "bg-purple-600 text-white shadow-lg shadow-purple-500/50"
-                      : "text-purple-300 hover:bg-purple-800/50"
+                      ? "bg-[#E8C77A] text-[#241006] shadow-lg shadow-[#E8C77A]/30"
+                      : "hover:bg-[#2A0B10]/60"
                   }`}
+                  style={activeTab !== "update" ? { color: '#D3C3C5' } : undefined}
                 >
                   Update
                 </button>
@@ -176,42 +178,43 @@ export default function StocksAdminPage() {
                   onClick={() => setActiveTab("delete")}
                   className={`flex-1 py-2 px-4 rounded-md transition-all ${
                     activeTab === "delete"
-                      ? "bg-purple-600 text-white shadow-lg shadow-purple-500/50"
-                      : "text-purple-300 hover:bg-purple-800/50"
+                      ? "bg-[#E8C77A] text-[#241006] shadow-lg shadow-[#E8C77A]/30"
+                      : "hover:bg-[#2A0B10]/60"
                   }`}
+                  style={activeTab !== "delete" ? { color: '#D3C3C5' } : undefined}
                 >
                   Delete
                 </button>
               </div>
 
 
-              <div className="bg-purple-950/50 backdrop-blur-sm rounded-lg border border-purple-700/50 p-6">
+              <div className="bg-[#1B080C]/60 backdrop-blur-sm rounded-lg border border-[#3D171E] p-6">
                 {activeTab === "add" && (
                   <div>
                     <h2 className="text-2xl font-semibold mb-4">Add New Stock</h2>
                     <div className="flex flex-col gap-4">
                       <div>
-                        <label className="block text-sm text-purple-300 mb-1">Stock Name</label>
+                        <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>Stock Name</label>
                         <input
                           type="text"
                           placeholder="Enter stock name"
                           value={newStock.StockName}
                           onChange={(e) => setNewStock({ ...newStock, StockName: e.target.value })}
-                          className="w-full px-4 py-3 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                          className="w-full px-4 py-3 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm text-purple-300 mb-1">Stock Value</label>
+                        <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>Stock Value</label>
                         <input
                           type="number"
                           placeholder="Enter stock value"
                           value={newStock.StockValue}
                           onChange={(e) => setNewStock({ ...newStock, StockValue: e.target.value })}
-                          className="w-full px-4 py-3 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                          className="w-full px-4 py-3 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                         />
                       </div>
                       <div onClick={handleCreate}>
-                        <Button text={loading ? "Adding..." : "Add Stock"} color="#4b006e" textColor="#fff" glowColor="#ff00cc" rippleColor="rgba(255,255,255,0.2)" />
+                        <Button text={loading ? "Adding..." : "Add Stock"} color="#E8C77A" textColor="#241006" glowColor="#F5DFA3" rippleColor="rgba(36,16,6,0.2)" />
                       </div>
                     </div>
                   </div>
@@ -222,7 +225,7 @@ export default function StocksAdminPage() {
                     <h2 className="text-2xl font-semibold mb-4">Update Stock Value</h2>
                     <div className="flex flex-col gap-4">
                       <div>
-                        <label className="block text-sm text-purple-300 mb-1">Select Stock</label>
+                        <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>Select Stock</label>
                         <select
                           value={selectedStock}
                           onChange={(e) => {
@@ -230,7 +233,7 @@ export default function StocksAdminPage() {
                             const stock = stocks.find(s => s.id === e.target.value);
                             setUpdateValue(stock ? stock.StockValue : "");
                           }}
-                          className="w-full px-4 py-3 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                          className="w-full px-4 py-3 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                         >
                           <option value="">Choose a stock</option>
                           {stocks.map(s => (
@@ -241,17 +244,17 @@ export default function StocksAdminPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm text-purple-300 mb-1">New Value</label>
+                        <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>New Value</label>
                         <input
                           type="number"
                           placeholder="Enter new value"
                           value={updateValue}
                           onChange={(e) => setUpdateValue(e.target.value)}
-                          className="w-full px-4 py-3 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                          className="w-full px-4 py-3 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                         />
                       </div>
                       <div onClick={handleUpdate}>
-                        <Button text={loading ? "Updating..." : "Update Stock"} color="#4b006e" textColor="#fff" glowColor="#ff00cc" rippleColor="rgba(255,255,255,0.2)" />
+                        <Button text={loading ? "Updating..." : "Update Stock"} color="#E8C77A" textColor="#241006" glowColor="#F5DFA3" rippleColor="rgba(36,16,6,0.2)" />
                       </div>
                     </div>
                   </div>
@@ -262,11 +265,11 @@ export default function StocksAdminPage() {
                     <h2 className="text-2xl font-semibold mb-4">Delete Stock</h2>
                     <div className="flex flex-col gap-4">
                       <div>
-                        <label className="block text-sm text-purple-300 mb-1">Select Stock</label>
+                        <label className="block text-sm mb-1" style={{ color: '#D3C3C5' }}>Select Stock</label>
                         <select
                           value={selectedStock}
                           onChange={(e) => setSelectedStock(e.target.value)}
-                          className="w-full px-4 py-3 rounded-lg bg-purple-900/50 text-white border border-purple-700 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                          className="w-full px-4 py-3 rounded-lg bg-[#2A0B10]/60 text-white border border-[#3D171E] focus:border-[#E8C77A] focus:outline-none focus:ring-2 focus:ring-[#E8C77A]/40 transition-all"
                         >
                           <option value="">Choose a stock to delete</option>
                           {stocks.map(s => (
@@ -280,7 +283,7 @@ export default function StocksAdminPage() {
                         Warning: This action cannot be undone
                       </div>
                       <div onClick={handleDelete}>
-                        <Button text={loading ? "Deleting..." : "Delete Stock"} color="#4b006e" textColor="#fff" glowColor="#ff00cc" rippleColor="rgba(255,255,255,0.2)" />
+                        <Button text={loading ? "Deleting..." : "Delete Stock"} color="#E8C77A" textColor="#241006" glowColor="#F5DFA3" rippleColor="rgba(36,16,6,0.2)" />
                       </div>
                     </div>
                   </div>
@@ -288,22 +291,21 @@ export default function StocksAdminPage() {
               </div>
             </div>
 
-
             <div className="space-y-6">
 
-              <div className="bg-gradient-to-br from-purple-600/30 to-pink-600/30 backdrop-blur-sm rounded-lg border border-purple-500/50 p-6">
+              <div className="bg-gradient-to-br from-[#42121B]/70 to-[#23080D]/90 backdrop-blur-sm rounded-lg border border-[#E8C77A]/20 p-6">
                 <h3 className="text-lg font-semibold mb-4">Statistics</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-purple-300">Total Stocks</span>
+                    <span style={{ color: '#D3C3C5' }}>Total Stocks</span>
                     <span className="text-2xl font-bold">{stocks.length}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-purple-300">Total Value</span>
+                    <span style={{ color: '#D3C3C5' }}>Total Value</span>
                     <span className="text-2xl font-bold">${totalValue.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-purple-300">Avg Value</span>
+                    <span style={{ color: '#D3C3C5' }}>Avg Value</span>
                     <span className="text-2xl font-bold">
                       ${stocks.length ? Math.round(totalValue / stocks.length).toLocaleString() : 0}
                     </span>
@@ -312,12 +314,12 @@ export default function StocksAdminPage() {
               </div>
 
 
-              <div className="bg-purple-950/50 backdrop-blur-sm rounded-lg border border-purple-700/50 p-6">
+              <div className="bg-[#1B080C]/60 backdrop-blur-sm rounded-lg border border-[#3D171E] p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">All Stocks</h3>
                   <button
                     onClick={fetchStocks}
-                    className="text-purple-300 hover:text-white transition-colors text-sm"
+                    className="text-[#F3D393] hover:text-white transition-colors text-sm"
                     disabled={loading}
                   >
                     {loading ? "Loading..." : "Refresh"}
@@ -325,17 +327,17 @@ export default function StocksAdminPage() {
                 </div>
                 <div className="max-h-96 overflow-y-auto space-y-2">
                   {stocks.length === 0 ? (
-                    <div className="text-center text-purple-400 py-8">
+                    <div className="text-center py-8" style={{ color: '#D3C3C5' }}>
                       No stocks yet
                     </div>
                   ) : (
                     stocks.map(s => (
                       <div
                         key={s.id}
-                        className="flex justify-between items-center p-3 rounded-lg bg-purple-900/30 hover:bg-purple-900/50 transition-all border border-purple-700/30"
+                        className="flex justify-between items-center p-3 rounded-lg bg-[#2A0B10]/40 hover:bg-[#2A0B10]/60 transition-all border border-[#3D171E]/60"
                       >
                         <span className="font-medium">{s.StockName}</span>
-                        <span className="text-purple-300 font-semibold">
+                        <span className="font-semibold text-[#F3D393]">
                           ${Number(s.StockValue).toLocaleString()}
                         </span>
                       </div>

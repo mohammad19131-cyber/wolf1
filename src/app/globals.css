@@ -3,16 +3,21 @@
 @tailwind utilities;
 html,
 body {
-  background-color: #191919;
-  color: white;
+  background-color: #14070A;
+  color: #FFFFFF;
 }
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+	font-family: var(--font-poppins), 'Poppins', system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+	background-image:
+		radial-gradient(circle at 86% 12%, rgba(232, 199, 122, 0.08), rgba(0, 0, 0, 0) 480px),
+		radial-gradient(circle at 10% 72%, rgba(118, 28, 43, 0.24), rgba(0, 0, 0, 0) 520px);
+	background-attachment: fixed;
+	background-repeat: no-repeat;
 }
 
 .font-sans {
-	font-family: 'Montserrat', 'Poppins', sans-serif;
+	font-family: var(--font-poppins), 'Poppins', system-ui, sans-serif;
 }
 
 @keyframes fade-in {
@@ -27,4 +32,3 @@ body {
 .delay-300 { animation-delay: 0.3s; }
 .delay-400 { animation-delay: 0.4s; }
 .delay-500 { animation-delay: 0.5s; }
-

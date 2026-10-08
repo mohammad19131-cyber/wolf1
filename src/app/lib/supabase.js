@@ -1,23 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables');
-  throw new Error('Missing Supabase environment variables. Please check your .env.local file.');
+export function hasSupabaseConfig() {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY));
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = serviceKey || anonKey;
 
-// Server-side Supabase client for API routes
-export function createServerClient() {
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  if (!supabaseUrl || !key) {
+    console.error('Missing Supabase environment variables');
+    throw new Error('Missing Supabase environment variables. Please check your .env.local file.');
+  }
+
+  return createClient(supabaseUrl, key, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -25,5 +23,12 @@ export function createServerClient() {
   });
 }
 
+export const supabase = {
+  from(...args) {
+    return getSupabaseClient().from(...args);
+  },
+};
 
-
+export function createServerClient() {
+  return getSupabaseClient();
+}
